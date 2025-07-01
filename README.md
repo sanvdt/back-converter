@@ -45,9 +45,17 @@ Uvicorn: servidor ASGI para rodar o FastAPI
 POST /convert/word → Envia .docx para conversão
 GET /convert/status/{job_id} → Verifica status e retorna o PDF pronto
 
+📤 Conversão de PDF para Word
+POST /convert/pdf-to-word → Envia PDF para conversão em .docx
+GET /convert/pdf-to-word/status/{job_id} → Verifica status e retorna o Word convertido
+
 🖼️ Conversão de Imagem para PDF
 POST /convert/image → Envia .jpg ou .png para conversão
 GET /convert/image/status/{job_id} → Verifica status e retorna o PDF pronto
+
+🖼️ Conversão de PDF para Imagem
+POST /convert/pdf-to-image → Envia PDF para conversão em imagens .jpg
+GET /convert/pdf-to-image/status/{job_id} → Verifica status e retorna a(s) imagem(ns) convertida(s)
 
 🗜️ Compressão de PDF
 POST /compress/pdf → Envia PDF para compressão
