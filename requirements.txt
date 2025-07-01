@@ -1,0 +1,5 @@
+fastapi==0.95.2
+uvicorn==0.23.1
+redis==4.6.0
+rq==1.15.1
+python-multipart==0.0.6
