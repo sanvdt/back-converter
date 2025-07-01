@@ -33,18 +33,27 @@ LibreOffice: usado para converter .docx para .pdf
 
 Pillow (PIL): usado para converter imagens .jpg / .png para .pdf
 
+Ghostscript: utilizado para comprimir arquivos PDF gerados
+
 Uvicorn: servidor ASGI para rodar o FastAPI
 
+
+
 📂 Estrutura das Rotas da API
+
 📝 Conversão de Word para PDF
 POST /convert/word → Envia .docx para conversão
-
 GET /convert/status/{job_id} → Verifica status e retorna o PDF pronto
 
 🖼️ Conversão de Imagem para PDF
 POST /convert/image → Envia .jpg ou .png para conversão
-
 GET /convert/image/status/{job_id} → Verifica status e retorna o PDF pronto
+
+🗜️ Compressão de PDF
+POST /compress/pdf → Envia PDF para compressão
+GET /compress/pdf/status/{job_id} → Verifica status e retorna o PDF comprimido
+
+
 
 🚀 Como funciona
 O usuário envia um arquivo via frontend
