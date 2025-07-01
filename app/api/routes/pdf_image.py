@@ -16,7 +16,7 @@ queue = Queue(connection=redis_conn)
 async def convert_pdf_to_image(file: UploadFile = File(...)):
     file_id = uuid.uuid4().hex
     input_dir = Path("storage/input")
-    output_dir = Path("storage/output/images")
+    output_dir = Path("storage/output")
     input_dir.mkdir(parents=True, exist_ok=True)
     output_dir.mkdir(parents=True, exist_ok=True)
 
