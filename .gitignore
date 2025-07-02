@@ -1,6 +1,5 @@
 __pycache__/
 *.pyc
 venv/
-storage/input/
-storage/output/
+storage/
 .env

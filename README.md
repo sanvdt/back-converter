@@ -16,6 +16,9 @@ pip freeze > requirements.txt
 Execute sua API com:
 uvicorn app.main:app --reload
 
+Execute o Redis com o comando:
+
+
 Acesse a documentação automática em:
 http://127.0.0.1:8000/docs
 
