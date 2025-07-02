@@ -7,6 +7,7 @@ from app.api.routes import pdf
 from app.api.routes import pdf_image
 from app.api.routes import merge_pdf
 from app.api.routes import split_pdf
+from app.api.routes import document_ai
 
 app = FastAPI()
 
@@ -26,3 +27,4 @@ app.include_router(pdf.router)
 app.include_router(pdf_image.router)
 app.include_router(merge_pdf.router)
 app.include_router(split_pdf.router)
+app.include_router(document_ai.router)
