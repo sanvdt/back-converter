@@ -1,77 +1,142 @@
-No Windows:
 
+# 📄 Conversor de Arquivos com FastAPI + RQ
+
+Este projeto é uma API desenvolvida com **FastAPI** e **Redis Queue (RQ)** para conversão e manipulação de arquivos, como PDF, Word, Imagens, Compressão e mais.
+
+---
+
+## ⚙️ Tecnologias Utilizadas
+
+- **FastAPI**: Framework web moderno e rápido em Python
+- **Redis**: Banco de dados em memória, utilizado como fila de tarefas
+- **RQ (Redis Queue)**: Execução assíncrona de tarefas com Redis
+- **LibreOffice**: Conversão de `.docx` para `.pdf`
+- **Pillow (PIL)**: Conversão de imagens `.jpg` / `.png` para `.pdf`
+- **Ghostscript**: Compressão de arquivos PDF
+- **PyPDF2**: Junção e separação de arquivos PDF
+- **Uvicorn**: Servidor ASGI para rodar o FastAPI
+
+---
+
+## 🖥️ Instalação
+
+### ▶️ Criar ambiente virtual
+
+**Windows**
+```bash
 python -m venv venv
 venv\Scripts\activate
+```
 
-
-No Linux/macOS:
-
+**Linux/macOS**
+```bash
 python3 -m venv venv
 source venv/bin/activate
+```
 
-salvar as libs instaladas:
+### 💾 Instalar dependências
+```bash
+pip install -r requirements.txt
+```
+
+> Para salvar novas dependências:
+```bash
 pip freeze > requirements.txt
+```
 
+---
 
-Execute sua API com:
+## 🚀 Executando o Projeto
+
+### 🔧 Subir a API
+```bash
 uvicorn app.main:app --reload
+```
 
-Execute o Redis com o comando:
+### 🧱 Subir o Redis
+> Se estiver usando Docker:
+```bash
+docker run -d -p 6379:6379 redis
+```
 
+### 🧑‍💻 Iniciar o Worker
+```bash
+python app/workers/worker.py
+```
 
-Acesse a documentação automática em:
-http://127.0.0.1:8000/docs
+### 📄 Acessar documentação
+[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
+---
 
+## 📂 Estrutura das Rotas da API
 
-⚙️ Tecnologias Utilizadas
-🔧 Backend (FastAPI + RQ)
-FastAPI: framework web rápido e moderno em Python
+```text
+/convert
+│
+├── /word
+│   ├── POST      → Converte .docx em PDF
+│   └── GET       → Verifica status do job
+│
+├── /pdf-to-word
+│   ├── POST      → Converte PDF em .docx
+│   └── GET       → Verifica status do job
+│
+├── /image
+│   ├── POST      → Converte .jpg/.png em PDF
+│   └── GET       → Verifica status do job
+│
+├── /pdf-to-image
+│   ├── POST      → Converte PDF em imagens .jpg
+│   └── GET       → Verifica status do job
+│
+├── /merge-pdf
+│   ├── POST      → Junta múltiplos PDFs em um só (com ordenação)
+│   └── GET       → Verifica status do job
+│
+└── /split-pdf
+    ├── POST      → Divide um PDF em várias páginas ou páginas específicas
+    └── GET       → Verifica status do job
 
-Redis: banco de dados em memória, usado como fila de tarefas
+/compress
+│
+└── /pdf
+    ├── POST      → Comprime arquivo PDF
+    └── GET       → Verifica status do job
+```
 
-RQ (Redis Queue): fila de tarefas para execução assíncrona
+---
 
-LibreOffice: usado para converter .docx para .pdf
+## 🧠 Como Funciona
 
-Pillow (PIL): usado para converter imagens .jpg / .png para .pdf
+1. O usuário envia um arquivo via frontend
+2. O backend salva o arquivo localmente
+3. Um job assíncrono é criado e enfileirado com **RQ + Redis**
+4. Um worker executa esse job em background
+5. O frontend consulta o status do job via `GET`
+6. Ao finalizar, o arquivo convertido é entregue para download
 
-Ghostscript: utilizado para comprimir arquivos PDF gerados
+---
 
-Uvicorn: servidor ASGI para rodar o FastAPI
+## 📌 Exemplo de Fluxo
 
+```mermaid
+graph TD
+A[Frontend] -->|Envia arquivo| B[API FastAPI]
+B -->|Salva localmente| C[Storage]
+B -->|Enfileira job| D[RQ + Redis]
+D -->|Worker executa| E[Conversão / Compressão / Split]
+E -->|Salva arquivo de saída| F[Storage]
+A -->|Consulta status| B
+B -->|Retorna download| A
+```
 
+---
 
-📂 Estrutura das Rotas da API
+## 📬 Contato
 
-📝 Conversão de Word para PDF
-POST /convert/word → Envia .docx para conversão
-GET /convert/status/{job_id} → Verifica status e retorna o PDF pronto
+<!-- Desenvolvido por **Thales Santos**  
+📧 [thales@thales.com]  
+🔗 [github.com/tahels] -->
 
-📤 Conversão de PDF para Word
-POST /convert/pdf-to-word → Envia PDF para conversão em .docx
-GET /convert/pdf-to-word/status/{job_id} → Verifica status e retorna o Word convertido
-
-🖼️ Conversão de Imagem para PDF
-POST /convert/image → Envia .jpg ou .png para conversão
-GET /convert/image/status/{job_id} → Verifica status e retorna o PDF pronto
-
-🖼️ Conversão de PDF para Imagem
-POST /convert/pdf-to-image → Envia PDF para conversão em imagens .jpg
-GET /convert/pdf-to-image/status/{job_id} → Verifica status e retorna a(s) imagem(ns) convertida(s)
-
-🗜️ Compressão de PDF
-POST /compress/pdf → Envia PDF para compressão
-GET /compress/pdf/status/{job_id} → Verifica status e retorna o PDF comprimido
-
-
-
-🚀 Como funciona
-O usuário envia um arquivo via frontend
-
-O backend armazena o arquivo localmente e cria um job assíncrono
-
-O job é processado em segundo plano (usando RQ + Redis)
-
-O frontend consulta o status e, quando estiver pronto, baixa o PDF convertido
-
+---
