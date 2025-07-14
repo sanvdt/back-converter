@@ -64,6 +64,12 @@ docker run -d -p 6379:6379 redis
 python app/workers/worker.py
 ```
 
+### 🧑‍💻 Anter de iniciar o Worker, pode ser necessário rodar o seuinte comando:
+```bash
+export PYTHONPATH=$(pwd)
+```
+export PYTHONPATH=$(pwd)
+
 ### 📄 Acessar documentação
 [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
