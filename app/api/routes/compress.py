@@ -8,11 +8,12 @@ import redis
 from rq import Queue
 from app.core.error_handling.utils import sanitize_filename
 from app.services.compress_pdf import compress_pdf
+import os
+redis_url = os.getenv("REDIS_URL", "redis://redis:6379")
+redis_conn = redis.from_url(redis_url)
+queue = Queue(connection=redis_conn)
 
 router = APIRouter()
-
-redis_conn = redis.Redis(host='localhost', port=6379)
-queue = Queue(connection=redis_conn)
 
 
 @router.post("/compress/pdf")
@@ -40,17 +41,28 @@ async def compress(file: UploadFile = File(...)):
 def get_compress_status(job_id: str):
     job = queue.fetch_job(job_id)
     if not job:
-        return {"error": "Tarefa não encontrada"}
+        return {"error": "Job não encontrado"}
 
-    if job.is_failed:
-        error_msg = "Ocorreu um erro ao comprimir o PDF. O nome do arquivo pode ser muito longo. Tente novamente com um nome de arquivo mais curto."
-        return {"job_id": job.get_id(), "status": "failed", "error": error_msg}
+    status = job.get_status()
+    result = None
 
     if job.is_finished:
-        pdf_path = job.result
-        if Path(pdf_path).exists():
-            return FileResponse(path=pdf_path, filename=Path(pdf_path).name)
+        pdf_path = Path(job.result)
+        if pdf_path.exists():
+            result = f"/download/{pdf_path.name}"
         else:
-            return {"error": "Arquivo PDF comprimido não encontrado"}
+            result = "Arquivo PDF não encontrado"
 
-    return {"job_id": job.get_id(), "status": job.get_status()}
+    return {
+        "job_id": job.id,
+        "status": status,
+        "result": result
+    }
+
+
+@router.get("/download/{filename}")
+def download_file(filename: str):
+    file_path = Path("storage/output") / filename
+    if file_path.exists():
+        return FileResponse(path=file_path, filename=filename)
+    return {"error": "Arquivo não encontrado"}, 404
