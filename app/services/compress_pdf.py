@@ -1,4 +1,3 @@
-# app/services/compress_pdf.py
 import subprocess
 from pathlib import Path
 from app.core.error_handling.decorators import handle_job_errors
@@ -22,7 +21,7 @@ def compress_pdf(input_path: str, output_dir: str, quality: str = "screen") -> s
         "gs",
         "-sDEVICE=pdfwrite",
         "-dCompatibilityLevel=1.4",
-        f"-dPDFSETTINGS={quality}",
+        f"-sPDFSETTINGS={quality}",
         "-dNOPAUSE",
         "-dQUIET",
         "-dBATCH",

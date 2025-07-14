@@ -1,4 +1,3 @@
-# app/api/routes/word.py
 from fastapi import APIRouter, UploadFile, File
 import shutil
 import uuid

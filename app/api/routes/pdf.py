@@ -10,7 +10,6 @@ from app.services.pdf_to_word import convert_pdf_to_word
 
 router = APIRouter()
 
-# Pega a URL do Redis da variável de ambiente, com fallback para redis://redis:6379
 redis_url = os.getenv("REDIS_URL", "redis://redis:6379")
 redis_conn = redis.from_url(redis_url)
 queue = Queue(connection=redis_conn)
