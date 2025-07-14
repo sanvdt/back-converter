@@ -7,10 +7,12 @@ import json
 import redis
 from rq import Queue
 from app.services.split_pdf import split_pdf
+import os
+redis_url = os.getenv("REDIS_URL", "redis://redis:6379")
+redis_conn = redis.from_url(redis_url)
+queue = Queue(connection=redis_conn)
 
 router = APIRouter()
-redis_conn = redis.Redis(host="localhost", port=6379)
-queue = Queue(connection=redis_conn)
 
 @router.post("/convert/split-pdf")
 async def split_pdf_route(
@@ -45,17 +47,31 @@ async def split_pdf_route(
     return {"job_id": job.get_id(), "status": job.get_status()}
 
 
+@router.get("/split/download/{filename}")
+def download_file(filename: str):
+    file_path = Path("storage/split_output") / filename
+    if file_path.exists():
+        return FileResponse(path=file_path, filename=filename)
+    return {"error": "Arquivo não encontrado"}, 404
+
 @router.get("/convert/split-pdf/status/{job_id}")
 def get_split_status(job_id: str):
     job = queue.fetch_job(job_id)
     if not job:
         return {"error": "Job não encontrado"}
 
+    status = job.get_status()
+    result = None
+
     if job.is_finished:
         output_files = job.result
-        if output_files and all(Path(p).exists() for p in output_files):
-            return FileResponse(path=output_files[0], filename=Path(output_files[0]).name)
+        if output_files and isinstance(output_files, list) and all(Path(p).exists() for p in output_files):
+            result = f"/split/download/{Path(output_files[0]).name}"
         else:
-            return {"error": "Arquivo(s) não encontrado(s)"}
+            result = "Arquivo(s) não encontrado(s)"
 
-    return {"job_id": job.get_id(), "status": job.get_status()}
+    return {
+        "job_id": job.id,
+        "status": status,
+        "result": result
+    }

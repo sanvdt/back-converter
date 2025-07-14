@@ -6,11 +6,13 @@ from pathlib import Path
 import redis
 from rq import Queue
 from app.services.word_to_pdf import convert_word_to_pdf
+import os
+redis_url = os.getenv("REDIS_URL", "redis://redis:6379")
+redis_conn = redis.from_url(redis_url)
+queue = Queue(connection=redis_conn)
 
 router = APIRouter()
 
-redis_conn = redis.Redis(host='localhost', port=6379)
-queue = Queue(connection=redis_conn)
 
 @router.post("/convert/word")
 async def convert_word(file: UploadFile = File(...)):
@@ -36,11 +38,25 @@ def get_status(job_id: str):
     if not job:
         return {"error": "Job não encontrado"}
 
-    if job.is_finished:
-        pdf_path = job.result
-        if Path(pdf_path).exists():
-            return FileResponse(path=pdf_path, filename=Path(pdf_path).name)
-        else:
-            return {"error": "Arquivo PDF não encontrado"}
+    status = job.get_status()
+    result = None
 
-    return {"job_id": job.get_id(), "status": job.get_status()}
+    if job.is_finished:
+        pdf_path = Path(job.result)
+        if pdf_path.exists():
+            result = f"/download/{pdf_path.name}"
+        else:
+            result = "Arquivo PDF não encontrado"
+
+    return {
+        "job_id": job.id,
+        "status": status,
+        "result": result
+    }
+
+@router.get("/download/{filename}")
+def download_file(filename: str):
+    file_path = Path("storage/output") / filename
+    if file_path.exists():
+        return FileResponse(path=file_path, filename=filename)
+    return {"error": "Arquivo não encontrado"}, 404

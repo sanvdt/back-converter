@@ -7,11 +7,13 @@ import redis
 import json
 from rq import Queue
 from app.services.merge_pdfs import merge_pdfs
+import os
+redis_url = os.getenv("REDIS_URL", "redis://redis:6379")
+redis_conn = redis.from_url(redis_url)
+queue = Queue(connection=redis_conn)
 
 router = APIRouter()
 
-redis_conn = redis.Redis(host='localhost', port=6379)
-queue = Queue(connection=redis_conn)
 
 @router.post("/convert/merge-pdf")
 async def merge_pdf(
@@ -41,17 +43,31 @@ async def merge_pdf(
     return {"job_id": job.get_id(), "status": job.get_status()}
 
 
+@router.get("/merge/download/{filename}")
+def download_file(filename: str):
+    file_path = Path("storage/merge_output") / filename
+    if file_path.exists():
+        return FileResponse(path=file_path, filename=filename)
+    return {"error": "Arquivo não encontrado"}, 404
+
 @router.get("/convert/merge-pdf/status/{job_id}")
 def get_merge_status(job_id: str):
     job = queue.fetch_job(job_id)
     if not job:
         return {"error": "Job não encontrado"}
 
+    status = job.get_status()
+    result = None
+
     if job.is_finished:
         merged_pdf = job.result
         if Path(merged_pdf).exists():
-            return FileResponse(path=merged_pdf, filename=Path(merged_pdf).name)
+            result = f"/merge/download/{Path(merged_pdf).name}"
         else:
-            return {"error": "Arquivo mesclado não encontrado"}
+            result = "Arquivo mesclado não encontrado"
 
-    return {"job_id": job.get_id(), "status": job.get_status()}
+    return {
+        "job_id": job.id,
+        "status": status,
+        "result": result
+    }

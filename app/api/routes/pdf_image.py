@@ -6,10 +6,12 @@ import uuid
 import redis
 from rq import Queue
 from app.services.pdf_to_image import convert_pdf_to_images
+import os
 
 router = APIRouter()
 
-redis_conn = redis.Redis(host='localhost', port=6379)
+redis_url = os.getenv("REDIS_URL", "redis://redis:6379")
+redis_conn = redis.from_url(redis_url)
 queue = Queue(connection=redis_conn)
 
 @router.post("/convert/pdf-to-image")
@@ -34,12 +36,25 @@ def get_pdf_to_image_status(job_id: str):
     if not job:
         return {"error": "Job não encontrado"}
 
+    status = job.get_status()
+    result = None
+
     if job.is_finished:
         image_paths = job.result
-        if image_paths and all(Path(p).exists() for p in image_paths):
-
-            return FileResponse(path=image_paths[0], filename=Path(image_paths[0]).name)
+        if image_paths and isinstance(image_paths, list) and all(Path(p).exists() for p in image_paths):
+            result = f"/download/{Path(image_paths[0]).name}"
         else:
-            return {"error": "Imagens não encontradas"}
+            result = "Imagens não encontradas"
 
-    return {"job_id": job.get_id(), "status": job.get_status()}
+    return {
+        "job_id": job.id,
+        "status": status,
+        "result": result
+    }
+
+@router.get("/download/{filename}")
+def download_file(filename: str):
+    file_path = Path("storage/output") / filename
+    if file_path.exists():
+        return FileResponse(path=file_path, filename=filename)
+    return {"error": "Arquivo não encontrado"}, 404
